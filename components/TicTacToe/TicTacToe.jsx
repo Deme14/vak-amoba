@@ -1,9 +1,17 @@
 "use client";
 
-import { useReset, useRoom, useUpdateBoard } from "@/hooks";
+import {
+  useJoinRoom,
+  useReset,
+  useRoom,
+  useUpdateBoard,
+  useUser,
+} from "@/hooks";
 import { useRef } from "react";
 import WinnerDialog from "../UI/WinnerDialog";
 import Board from "./Board";
+import XIcon from "../Icons/XIcon";
+import CircleIcon from "../Icons/CircleIcon";
 
 const TicTacToe = ({ roomId, user }) => {
   const winnerDialogRef = useRef(null);
@@ -14,12 +22,22 @@ const TicTacToe = ({ roomId, user }) => {
     winnerDialogRef.current.open();
   };
   const { room, isLoading } = useRoom(roomId);
-  const { updateBoard, isUpdating } = useUpdateBoard(roomId, room, openDialog);
+  const { updateBoard, isUpdating } = useUpdateBoard(
+    roomId,
+    room,
+    openDialog,
+    user
+  );
   const { resetBoard } = useReset();
+  const { joinAs, isJoining } = useJoinRoom(roomId);
+  const playerXUser = useUser(room?.playerX);
+  const playerOUser = useUser(room?.playerO);
 
   if (!room) {
     return null;
   }
+
+  const { board, playerTurn, winner, isGameDone, playerO, playerX } = room;
 
   if (isLoading) {
     return (
@@ -35,19 +53,65 @@ const TicTacToe = ({ roomId, user }) => {
     </div>;
   }
 
-  const { board, playerTurn, winner, isGameDone } = room;
+  if (isJoining) {
+    <div className="fixed inset-0 size-full pointer-events-none grid place-content-center bg-black/70">
+      <h1 className="text-white text-7xl">Joining to room...</h1>
+    </div>;
+  }
 
   return (
-    <div className="text-center max-w-screen-sm m-auto bg-[#242424]">
-      <h1 className="text-white text-5xl mt-6 mb-10">Let&apos;s play </h1>
+    <div className="text-center max-w-screen-sm m-auto">
+      <h1 className="text-white text-5xl mt-6 mb-8">
+        {playerO && playerX ? "Let's play" : "Pick your sign"}
+      </h1>
 
-      <Board
-        tiles={board}
-        onTileClick={updateBoard}
-        onReset={resetBoard}
-        playerTurn={playerTurn}
-        roomId={roomId}
-      />
+      {(!playerO || !playerX) && (
+        <div className="my-auto flex flex-col items-center">
+          <div className="grid grid-cols-3 items-center">
+            <XIcon className="" />{" "}
+            {playerX ? (
+              <span className="col-start-3 font-semibold">
+                {playerXUser?.teamName}
+              </span>
+            ) : (
+              <button
+                onClick={() => joinAs(user, "X")}
+                className="px-4 py-2.5 bg-zinc-300 text-black rounded-full col-start-3"
+              >
+                Join as X
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-3 items-center">
+            <CircleIcon className="" />{" "}
+            {playerO ? (
+              <span className="col-start-3 font-semibold">
+                {playerOUser?.teamName}
+              </span>
+            ) : (
+              <button
+                onClick={() => joinAs(user, "O")}
+                className="px-4 py-2.5 bg-zinc-300 text-black rounded-full col-start-3"
+              >
+                Join as O
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {playerO && playerX && (
+        <Board
+          tiles={board}
+          onTileClick={updateBoard}
+          onReset={resetBoard}
+          playerTurn={playerTurn}
+          roomId={roomId}
+          playerX={playerX}
+          playerO={playerO}
+          currentUserId={user}
+        />
+      )}
 
       {isGameDone && winner && (
         <WinnerDialog
@@ -55,6 +119,8 @@ const TicTacToe = ({ roomId, user }) => {
           ref={winnerDialogRef}
           resetBoard={resetBoard}
           roomId={roomId}
+          playerO={playerO}
+          playerX={playerX}
         />
       )}
     </div>

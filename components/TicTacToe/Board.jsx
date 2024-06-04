@@ -1,6 +1,15 @@
 import Tile from "./Tile";
 
-const Board = ({ tiles, onTileClick, onReset, playerTurn, roomId }) => {
+const Board = ({
+  tiles,
+  onTileClick,
+  onReset,
+  playerTurn,
+  roomId,
+  playerX,
+  playerO,
+  currentUserId
+}) => {
   return (
     <>
       <div className="grid grid-cols-3 gap-3 bg-white m-auto">
@@ -11,6 +20,9 @@ const Board = ({ tiles, onTileClick, onReset, playerTurn, roomId }) => {
               value={tile}
               onClick={() => onTileClick(index)}
               playerTurn={playerTurn}
+              playerO={playerO}
+              playerX={playerX}
+              currentUserId={currentUserId}
             />
           );
         })}

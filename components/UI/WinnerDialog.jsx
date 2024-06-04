@@ -2,12 +2,17 @@
 
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import XIcon from "../Icons/XIcon";
+import { useUser } from "@/hooks";
 
 const WinnerDialog = forwardRef(function WinnerDialog(
-  { winner, resetBoard, roomId },
+  { winner, resetBoard, roomId, playerX, playerO },
   ref
 ) {
   const dialogRef = useRef(null);
+  const winnerId =
+    winner === "DRAW" ? null : winner === "x" ? playerX : playerO;
+
+  const winnerUser = useUser(winnerId);
 
   useImperativeHandle(ref, () => {
     return {
@@ -27,7 +32,7 @@ const WinnerDialog = forwardRef(function WinnerDialog(
       <h2 className="text-5xl">
         {winner === "x" || winner === "o" ? "The winner is: " : "It's a "}
         <span className="font-extrabold uppercase">
-          {winner === "DRAW" ? "draw" : winner}
+          {winner === "DRAW" ? "draw" : winnerUser?.teamName}
         </span>
         !
       </h2>

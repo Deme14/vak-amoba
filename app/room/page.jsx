@@ -32,12 +32,10 @@ const createBoard = async (user, data) => {
 };
 
 const RoomPage = ({ searchParams }) => {
-  const createOrJoinBoard = createBoard.bind(null, searchParams.user);
-
   return (
     <div>
       <h2>Create/join room</h2>
-      <form action={createOrJoinBoard}>
+      <form action={createBoard.bind(null, searchParams.user)}>
         <label htmlFor="roomName">Room name</label>
         <input type="text" name="roomName" id="roomName" />
         <button type="submit">Create/join</button>
