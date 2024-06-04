@@ -37,7 +37,15 @@ const TicTacToe = ({ roomId, user }) => {
     return null;
   }
 
-  const { board, playerTurn, winner, isGameDone, playerO, playerX } = room;
+  const {
+    board,
+    playerTurn,
+    winner,
+    isGameDone,
+    playerO,
+    playerX,
+    turnNumber,
+  } = room;
 
   if (isLoading) {
     return (
@@ -60,14 +68,27 @@ const TicTacToe = ({ roomId, user }) => {
   }
 
   return (
-    <div className="text-center max-w-screen-sm m-auto">
-      <h1 className="text-white text-5xl mt-6 mb-8">
+    <div className="text-center min-h-svh max-w-screen-sm m-auto h-full flex flex-col justify-space-between items-center py-10 gap-10 md:gap-8">
+      <h1 className="text-white text-5xl">
         {playerO && playerX ? "Let's play" : "Pick your sign"}
       </h1>
 
+      {playerO && playerX && (
+        <h3>
+          {playerTurn === "x"
+            ? user === playerX
+              ? "Your"
+              : `${playerOUser?.teamName}'s`
+            : user === playerO
+            ? "Your"
+            : `${playerXUser?.teamName}'s`}{" "}
+          turn
+        </h3>
+      )}
+
       {(!playerO || !playerX) && (
         <div className="my-auto flex flex-col items-center">
-          <div className="grid grid-cols-3 items-center">
+          <div className="grid grid-cols-3 items-center justify-items-center">
             <XIcon className="" />{" "}
             {playerX ? (
               <span className="col-start-3 font-semibold">
@@ -82,8 +103,8 @@ const TicTacToe = ({ roomId, user }) => {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-3 items-center">
-            <CircleIcon className="" />{" "}
+          <div className="grid grid-cols-3 items-center justify-items-center">
+            <CircleIcon className="size-[80px] md:size-[100px]" />{" "}
             {playerO ? (
               <span className="col-start-3 font-semibold">
                 {playerOUser?.teamName}
@@ -110,6 +131,7 @@ const TicTacToe = ({ roomId, user }) => {
           playerX={playerX}
           playerO={playerO}
           currentUserId={user}
+          turnNumber={turnNumber}
         />
       )}
 

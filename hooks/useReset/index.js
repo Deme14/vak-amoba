@@ -9,6 +9,8 @@ const useReset = () => {
       turnNumber: 1,
       winner: "",
       playerTurn: "x",
+      playerX: "",
+      playerO: "",
     });
 
     return;

@@ -10,7 +10,13 @@ const Tile = ({
   currentUserId,
 }) => {
   const icon =
-    value !== null ? value === "x" ? <XIcon /> : <CircleIcon /> : null;
+    value !== null ? (
+      value === "x" ? (
+        <XIcon />
+      ) : (
+        <CircleIcon className="size-[80px] md:size-[100px]" />
+      )
+    ) : null;
 
   let hoverClass;
 
@@ -28,7 +34,9 @@ const Tile = ({
 
   return (
     <div
-      className={`min-w-[200px] aspect-square bg-[#242424] cursor-pointer flex items-center justify-center text-white hover:after:invert hover:after:opacity-30 hover:after:size-[100px] ${hoverClass}`}
+      className={`min-w-[100px] md:min-w-[200px] aspect-square bg-[#242424] flex items-center justify-center text-white hover:after:invert hover:after:opacity-30 hover:after:size-[100px] ${hoverClass} ${
+        value === null ? "cursor-pointer" : "cursor-not-allowed"
+      }`}
       onClick={onClick}
     >
       {icon}
