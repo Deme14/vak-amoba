@@ -28,7 +28,7 @@ const Board = ({
           );
         })}
       </div>
-      {turnNumber === 9 && (
+      {turnNumber >= 9 && (
         <button
           className="w-fit px-5 py-3 text-white text-lg border border-white rounded-md"
           onClick={() => onReset(roomId)}
