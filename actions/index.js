@@ -5,7 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc } from "firebase/firestore";
 import { redirect } from "next/navigation";
 
 export const signIn = async (data) => {
@@ -35,4 +35,32 @@ export const signUp = async (data) => {
   });
 
   redirect(`/room?user=${user.uid}`);
+};
+
+export const createBoard = async (user, data) => {
+  const collRef = collection(firestore, "rooms");
+
+  const roomName = data.get("roomName");
+  if (!roomName) return;
+
+  const roomNameToHyphenated = roomName.split(" ").join("-");
+
+  const roomDoc = await getDoc(doc(collRef, roomNameToHyphenated));
+
+  if (!roomDoc.exists()) {
+    await setDoc(doc(collRef, roomNameToHyphenated), {
+      name: roomName,
+      board: Array(9).fill(null),
+      isGameDone: false,
+      turnNumber: 1,
+      winner: "",
+      playerTurn: "x",
+    });
+
+    const roomRef = doc(collRef, roomNameToHyphenated);
+
+    redirect(`/room/${roomRef.id}?user=${user}`);
+  } else {
+    redirect(`/room/${roomDoc.id}?user=${user}`);
+  }
 };
