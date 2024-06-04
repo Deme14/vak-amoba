@@ -68,7 +68,7 @@ const TicTacToe = ({ roomId, user }) => {
   }
 
   return (
-    <div className="text-center min-h-svh max-w-screen-sm m-auto h-full flex flex-col justify-space-between items-center py-10 gap-10 md:gap-8">
+    <div className="text-center h-svh max-w-screen-sm m-auto flex flex-col justify-space-between items-center py-10 gap-10 md:gap-8">
       <h1 className="text-white text-5xl">
         {playerO && playerX ? "Let's play" : "Pick your sign"}
       </h1>
@@ -76,12 +76,8 @@ const TicTacToe = ({ roomId, user }) => {
       {playerO && playerX && (
         <h3>
           {playerTurn === "x"
-            ? user === playerX
-              ? "Your"
-              : `${playerOUser?.teamName}'s`
-            : user === playerO
-            ? "Your"
-            : `${playerXUser?.teamName}'s`}{" "}
+            ? playerXUser?.teamName + "'s"
+            : playerOUser?.teamName + "'s"}{" "}
           turn
         </h3>
       )}

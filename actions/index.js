@@ -43,7 +43,7 @@ export const createBoard = async (user, data) => {
   const roomName = data.get("roomName");
   if (!roomName) return;
 
-  const roomNameToHyphenated = roomName.split(" ").join("-");
+  const roomNameToHyphenated = roomName.toLowerCase().split(" ").join("-");
 
   const roomDoc = await getDoc(doc(collRef, roomNameToHyphenated));
 
