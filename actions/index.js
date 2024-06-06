@@ -53,7 +53,7 @@ export const createBoard = async (user, data) => {
       board: Array(9).fill(null),
       isGameDone: false,
       turnNumber: 1,
-      winner: "",
+      winner: "NONE",
       playerTurn: "x",
     });
 

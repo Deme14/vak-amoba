@@ -7,7 +7,7 @@ import {
   useUpdateBoard,
   useUser,
 } from "@/hooks";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import WinnerDialog from "../UI/WinnerDialog";
 import Board from "./Board";
 import XIcon from "../Icons/XIcon";
@@ -21,17 +21,24 @@ const TicTacToe = ({ roomId, user }) => {
 
     winnerDialogRef.current.open();
   };
+
+  const closeDialog = () => {
+    if (!winnerDialogRef.current) return;
+
+    winnerDialogRef.current.close();
+  };
   const { room, isLoading } = useRoom(roomId);
-  const { updateBoard, isUpdating } = useUpdateBoard(
-    roomId,
-    room,
-    openDialog,
-    user
-  );
+  const { updateBoard, isUpdating } = useUpdateBoard(roomId, room, user);
   const { resetBoard } = useReset();
   const { joinAs, isJoining } = useJoinRoom(roomId);
   const playerXUser = useUser(room?.playerX);
   const playerOUser = useUser(room?.playerO);
+
+  useEffect(() => {
+    if (room?.winner !== "NONE") {
+      openDialog();
+    }
+  }, [room?.winner]);
 
   if (!room) {
     return null;
@@ -131,7 +138,7 @@ const TicTacToe = ({ roomId, user }) => {
         />
       )}
 
-      {isGameDone && winner && (
+      {isGameDone && (
         <WinnerDialog
           winner={winner}
           ref={winnerDialogRef}

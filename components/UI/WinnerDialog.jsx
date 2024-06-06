@@ -23,8 +23,8 @@ const WinnerDialog = forwardRef(function WinnerDialog(
   });
 
   const handleClose = () => {
-    resetBoard(roomId);
     dialogRef.current.close();
+    resetBoard(roomId);
   };
 
   return (
@@ -38,8 +38,8 @@ const WinnerDialog = forwardRef(function WinnerDialog(
       </h2>
 
       <button
-        className="w-fit aspect-square p-2.5 rounded-full flex items-center justify-center absolute top-6 right-6 border border-white"
         onClick={handleClose}
+        className="w-fit aspect-square p-2.5 rounded-full flex items-center justify-center absolute top-6 right-6 border border-white"
       >
         <XIcon className="size-10" />
       </button>

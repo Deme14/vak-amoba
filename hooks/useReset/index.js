@@ -7,7 +7,7 @@ const useReset = () => {
       board: Array(9).fill(null),
       isGameDone: false,
       turnNumber: 1,
-      winner: "",
+      winner: "NONE",
       playerTurn: "x",
       playerX: "",
       playerO: "",
