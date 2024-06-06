@@ -13,7 +13,7 @@ const Board = ({
 }) => {
   return (
     <>
-      <div className="grid grid-cols-3 gap-2 md:gap-3 bg-white m-auto">
+      <div className="grid grid-cols-3 gap-2 md:gap-3 bg-white m-auto overflow-hidden">
         {tiles?.map((tile, index) => {
           return (
             <Tile
