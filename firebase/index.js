@@ -8,7 +8,7 @@ const firebaseConfig = {
   projectId: "vak-amoba",
   storageBucket: "vak-amoba.appspot.com",
   messagingSenderId: "505414428431",
-  appId: process.env.FIREBASE_APP_ID,
+  appId: "1:505414428431:web:e0c57d80bff8553fca407a",
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
