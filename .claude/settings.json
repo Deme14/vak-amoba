@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn lint *)",
+      "Bash(yarn build *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\hunid\\.claude\\projects\\c--Users-hunid-Desktop-vak-amoba\\memory"
+    ]
+  }
+}

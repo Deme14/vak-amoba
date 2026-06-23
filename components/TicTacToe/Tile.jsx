@@ -1,6 +1,13 @@
 import CircleIcon from "@/components/Icons/CircleIcon";
 import XIcon from "@/components/Icons/XIcon";
 
+const renderSign = (sign, className) =>
+  sign === "x" ? (
+    <XIcon className={className} />
+  ) : (
+    <CircleIcon className={className} />
+  );
+
 const Tile = ({
   value,
   onClick,
@@ -8,38 +15,35 @@ const Tile = ({
   playerX,
   playerO,
   currentUserId,
+  isOccupiedHint,
 }) => {
-  const icon =
-    value !== null ? (
-      value === "x" ? (
-        <XIcon />
-      ) : (
-        <CircleIcon className="size-[80px] md:size-[100px]" />
-      )
-    ) : null;
+  // The sign the current player is allowed to see/place.
+  const ownSign =
+    currentUserId === playerX ? "x" : currentUserId === playerO ? "o" : null;
 
-  let hoverClass;
+  // Blind amőba: a tile is only revealed if it belongs to the current player.
+  // The opponent's marks stay hidden, so they look like empty tiles.
+  const visibleValue = value === ownSign ? value : null;
 
-  if (value !== null) {
-    hoverClass = "hover:after:hidden";
-  }
-
-  if (value === null && playerTurn === "x" && currentUserId === playerX) {
-    hoverClass = "hover:after:content-xIcon";
-  }
-
-  if (value === null && playerTurn === "o" && currentUserId === playerO) {
-    hoverClass = "hover:after:content-circleIcon";
-  }
+  const isMyTurn = ownSign !== null && playerTurn === ownSign;
+  const showHoverPreview = visibleValue === null && isMyTurn;
 
   return (
     <div
-      className={`min-w-[100px] md:min-w-[200px] aspect-square bg-[#242424] flex items-center justify-center text-white hover:after:invert hover:after:opacity-30 hover:after:size-[100px] ${hoverClass} ${
-        value === null ? "cursor-pointer" : "cursor-not-allowed"
-      }`}
+      className={`group relative w-full aspect-square flex items-center justify-center text-white ${
+        visibleValue === null ? "cursor-pointer" : "cursor-not-allowed"
+      } ${isOccupiedHint ? "occupied-flash" : "bg-[#242424]"}`}
       onClick={onClick}
     >
-      {icon}
+      {visibleValue && renderSign(visibleValue, "w-3/5 h-3/5")}
+
+      {/* Hover preview of your own mark (desktop only — uses the same icon, so
+          it lines up exactly with where the mark will be placed). */}
+      {showHoverPreview &&
+        renderSign(
+          ownSign,
+          "w-3/5 h-3/5 opacity-0 transition-opacity group-hover:opacity-30"
+        )}
     </div>
   );
 };

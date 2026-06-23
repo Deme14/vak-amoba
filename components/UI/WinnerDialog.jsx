@@ -1,48 +1,93 @@
 "use client";
 
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import XIcon from "../Icons/XIcon";
-import { useUser } from "@/hooks";
+import { WINS_TO_FINISH } from "@/constants";
 
 const WinnerDialog = forwardRef(function WinnerDialog(
-  { winner, resetBoard, roomId, playerX, playerO },
+  {
+    winner,
+    scoreX,
+    scoreO,
+    seriesWinner,
+    playerXUser,
+    playerOUser,
+    roomId,
+    onNextRound,
+    onBackToLobby,
+  },
   ref
 ) {
   const dialogRef = useRef(null);
-  const winnerId =
-    winner === "DRAW" ? null : winner === "x" ? playerX : playerO;
-
-  const winnerUser = useUser(winnerId);
 
   useImperativeHandle(ref, () => {
     return {
       open() {
-        dialogRef.current.showModal();
+        dialogRef.current?.showModal();
+      },
+      close() {
+        dialogRef.current?.close();
       },
     };
   });
 
-  const handleClose = () => {
-    dialogRef.current.close();
-    resetBoard(roomId);
+  const isSeriesDone = seriesWinner === "x" || seriesWinner === "o";
+
+  const xName = playerXUser?.teamName ?? "X";
+  const oName = playerOUser?.teamName ?? "O";
+
+  const handleClick = () => {
+    dialogRef.current?.close();
+    if (isSeriesDone) {
+      onBackToLobby(roomId);
+    } else {
+      onNextRound(roomId, winner);
+    }
   };
 
   return (
-    <dialog ref={dialogRef} className="winner-dialog">
-      <h2 className="text-5xl">
-        {winner === "x" || winner === "o" ? "The winner is: " : "It's a "}
-        <span className="font-extrabold uppercase">
-          {winner === "DRAW" ? "draw" : winnerUser?.teamName}
-        </span>
-        !
-      </h2>
+    <dialog
+      ref={dialogRef}
+      className="winner-dialog"
+      onCancel={(event) => event.preventDefault()}
+    >
+      <div className="flex flex-col items-center gap-8 text-center">
+        {isSeriesDone ? (
+          <h2 className="text-4xl md:text-5xl">
+            🏆{" "}
+            <span className="font-extrabold uppercase">
+              {seriesWinner === "x" ? xName : oName}
+            </span>{" "}
+            wins the series!
+          </h2>
+        ) : (
+          <h2 className="text-4xl md:text-5xl">
+            {winner === "DRAW" ? (
+              "It's a draw!"
+            ) : (
+              <>
+                <span className="font-extrabold uppercase">
+                  {winner === "x" ? xName : oName}
+                </span>{" "}
+                won this round!
+              </>
+            )}
+          </h2>
+        )}
 
-      <button
-        onClick={handleClose}
-        className="w-fit aspect-square p-2.5 rounded-full flex items-center justify-center absolute top-6 right-6 border border-white"
-      >
-        <XIcon className="size-10" />
-      </button>
+        <div className="text-2xl md:text-3xl">
+          <span className="font-bold">{xName}</span> {scoreX} : {scoreO}{" "}
+          <span className="font-bold">{oName}</span>
+        </div>
+
+        <p className="text-sm text-zinc-400">First to {WINS_TO_FINISH} wins</p>
+
+        <button
+          onClick={handleClick}
+          className="px-6 py-3 rounded-full bg-purple-900 hover:bg-purple-800 text-white text-lg"
+        >
+          {isSeriesDone ? "Back to lobby" : "Next round"}
+        </button>
+      </div>
     </dialog>
   );
 });

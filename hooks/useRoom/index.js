@@ -16,7 +16,7 @@ const useRoom = (roomId) => {
     );
 
     return () => unsubscribe();
-  }, [roomId, isLoading]);
+  }, [roomId]);
 
   return { room, isLoading };
 };

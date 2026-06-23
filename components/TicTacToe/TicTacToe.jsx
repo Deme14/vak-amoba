@@ -3,42 +3,74 @@
 import {
   useJoinRoom,
   useReset,
+  useRollDice,
   useRoom,
+  useTournamentActions,
   useUpdateBoard,
   useUser,
 } from "@/hooks";
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import WinnerDialog from "../UI/WinnerDialog";
+import Scoreboard from "./Scoreboard";
+import DiceRoll from "./DiceRoll";
 import Board from "./Board";
 import XIcon from "../Icons/XIcon";
 import CircleIcon from "../Icons/CircleIcon";
 
 const TicTacToe = ({ roomId, user }) => {
   const winnerDialogRef = useRef(null);
+  const wasPlayerRef = useRef(false);
+  const router = useRouter();
 
-  const openDialog = () => {
-    if (!winnerDialogRef.current) return;
-
-    winnerDialogRef.current.open();
-  };
-
-  const closeDialog = () => {
-    if (!winnerDialogRef.current) return;
-
-    winnerDialogRef.current.close();
-  };
   const { room, isLoading } = useRoom(roomId);
-  const { updateBoard, isUpdating } = useUpdateBoard(roomId, room, user);
-  const { resetBoard } = useReset();
+  const { updateBoard, isUpdating, occupiedTile } = useUpdateBoard(
+    roomId,
+    room,
+    user
+  );
+  const { nextRound, resetRoom } = useReset();
+  const { reportMatchWinner } = useTournamentActions();
+  const { roll, startWith, rerollDice } = useRollDice(roomId);
   const { joinAs, isJoining } = useJoinRoom(roomId);
   const playerXUser = useUser(room?.playerX);
   const playerOUser = useUser(room?.playerO);
 
+  // Open the result dialog whenever a round ends. When the next round starts
+  // (winner back to "NONE") the dialog unmounts and closes on its own.
   useEffect(() => {
-    if (room?.winner !== "NONE") {
-      openDialog();
+    if (room?.winner && room.winner !== "NONE") {
+      winnerDialogRef.current?.open();
     }
   }, [room?.winner]);
+
+  // Resolve the dice roll once both players have rolled. Idempotent, so it is
+  // fine for both clients to run it; a tie is left for the UI to re-roll.
+  useEffect(() => {
+    if (!room) return;
+
+    const { playerX, playerO, playerTurn, isGameDone, diceX, diceO } = room;
+
+    if (!playerX || !playerO || isGameDone) return;
+    if (playerTurn != null) return;
+    if (diceX == null || diceO == null || diceX === diceO) return;
+
+    startWith(diceX > diceO ? "x" : "o");
+  }, [room, startWith]);
+
+  // Once you were a player but no longer are (e.g. the series ended and the room
+  // was released back to the lobby), send yourself back to the lobby.
+  useEffect(() => {
+    if (!room) return;
+
+    const isPlayer = user === room.playerX || user === room.playerO;
+
+    if (isPlayer) {
+      wasPlayerRef.current = true;
+    } else if (wasPlayerRef.current) {
+      router.push("/room");
+    }
+  }, [room, user, router]);
 
   if (!room) {
     return null;
@@ -51,48 +83,89 @@ const TicTacToe = ({ roomId, user }) => {
     isGameDone,
     playerO,
     playerX,
-    turnNumber,
+    diceX,
+    diceO,
+    matchId,
+    scoreX = 0,
+    scoreO = 0,
+    seriesWinner = "NONE",
+    matchHistory = [],
   } = room;
+
+  // End of series. For a tournament match, report the winner to the bracket
+  // first so it advances; then release the room and head back to the lobby.
+  const handleBackToLobby = async (rid) => {
+    if (matchId && (seriesWinner === "x" || seriesWinner === "o")) {
+      const winnerUserId = seriesWinner === "x" ? playerX : playerO;
+      await reportMatchWinner(matchId, winnerUserId);
+    }
+    await resetRoom(rid);
+  };
 
   if (isLoading) {
     return (
       <div className="fixed inset-0 size-full pointer-events-none grid place-content-center bg-black/70">
-        <h1 className="text-white text-7xl">Loading...</h1>
+        <h1 className="text-white text-4xl md:text-7xl">Loading...</h1>
       </div>
     );
   }
 
-  if (isUpdating) {
-    <div className="fixed inset-0 size-full pointer-events-none grid place-content-center bg-black/70">
-      <h1 className="text-white text-7xl">Waiting for other player...</h1>
-    </div>;
-  }
+  const bothPlayersReady = playerO && playerX;
+  const needsRoll = bothPlayersReady && !isGameDone && playerTurn == null;
+  const isPlaying = bothPlayersReady && playerTurn != null;
 
-  if (isJoining) {
-    <div className="fixed inset-0 size-full pointer-events-none grid place-content-center bg-black/70">
-      <h1 className="text-white text-7xl">Joining to room...</h1>
-    </div>;
-  }
+  const ownSign = user === playerX ? "x" : user === playerO ? "o" : null;
+  const ownTeamName =
+    ownSign === "x"
+      ? playerXUser?.teamName
+      : ownSign === "o"
+      ? playerOUser?.teamName
+      : null;
+  const opponentName =
+    playerTurn === "x" ? playerXUser?.teamName : playerOUser?.teamName;
 
   return (
-    <div className="text-center h-svh max-w-screen-sm m-auto flex flex-col justify-space-between items-center py-10 gap-10 md:gap-8">
-      <h1 className="text-white text-5xl">
-        {playerO && playerX ? "Let's play" : "Pick your sign"}
+    <div className="text-center min-h-svh max-w-screen-sm m-auto flex flex-col justify-center items-center px-4 py-6 md:py-10 gap-4 md:gap-6">
+      {(isUpdating || isJoining) && (
+        <div className="fixed inset-0 size-full pointer-events-none grid place-content-center bg-black/70 z-10 px-4 text-center">
+          <h1 className="text-white text-4xl md:text-7xl">
+            {isJoining ? "Joining to room..." : "Waiting for other player..."}
+          </h1>
+        </div>
+      )}
+
+      <h1 className="text-white text-3xl md:text-5xl">
+        {bothPlayersReady ? "Let's play" : "Pick your sign"}
       </h1>
 
-      {playerO && playerX && (
+      {ownTeamName && (
+        <p className="text-sm text-zinc-400">
+          You are{" "}
+          <span className="font-semibold text-white">{ownTeamName}</span> (
+          {ownSign.toUpperCase()})
+        </p>
+      )}
+
+      {bothPlayersReady && (
+        <Scoreboard
+          scoreX={scoreX}
+          scoreO={scoreO}
+          matchHistory={matchHistory}
+          playerXName={playerXUser?.teamName}
+          playerOName={playerOUser?.teamName}
+        />
+      )}
+
+      {isPlaying && (
         <h3>
-          {playerTurn === "x"
-            ? playerXUser?.teamName + "'s"
-            : playerOUser?.teamName + "'s"}{" "}
-          turn
+          {playerTurn === ownSign ? "Your turn" : `${opponentName}'s turn`}
         </h3>
       )}
 
-      {(!playerO || !playerX) && (
-        <div className="my-auto flex flex-col items-center">
-          <div className="grid grid-cols-3 items-center justify-items-center">
-            <XIcon className="" />{" "}
+      {!bothPlayersReady && (
+        <div className="my-auto flex w-full max-w-xs flex-col items-center gap-4">
+          <div className="grid w-full grid-cols-3 items-center justify-items-center">
+            <XIcon className="size-16 md:size-24" />{" "}
             {playerX ? (
               <span className="col-start-3 font-semibold">
                 {playerXUser?.teamName}
@@ -106,8 +179,8 @@ const TicTacToe = ({ roomId, user }) => {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-3 items-center justify-items-center">
-            <CircleIcon className="size-[80px] md:size-[100px]" />{" "}
+          <div className="grid w-full grid-cols-3 items-center justify-items-center">
+            <CircleIcon className="size-16 md:size-24" />{" "}
             {playerO ? (
               <span className="col-start-3 font-semibold">
                 {playerOUser?.teamName}
@@ -124,28 +197,42 @@ const TicTacToe = ({ roomId, user }) => {
         </div>
       )}
 
-      {playerO && playerX && (
+      {needsRoll && (
+        <DiceRoll
+          diceX={diceX}
+          diceO={diceO}
+          ownSign={ownSign}
+          playerXName={playerXUser?.teamName}
+          playerOName={playerOUser?.teamName}
+          onRoll={roll}
+          onReroll={rerollDice}
+        />
+      )}
+
+      {isPlaying && (
         <Board
           tiles={board}
           onTileClick={updateBoard}
-          onReset={resetBoard}
           playerTurn={playerTurn}
-          roomId={roomId}
           playerX={playerX}
           playerO={playerO}
           currentUserId={user}
-          turnNumber={turnNumber}
+          occupiedTile={occupiedTile}
         />
       )}
 
       {isGameDone && (
         <WinnerDialog
-          winner={winner}
           ref={winnerDialogRef}
-          resetBoard={resetBoard}
+          winner={winner}
+          scoreX={scoreX}
+          scoreO={scoreO}
+          seriesWinner={seriesWinner}
+          playerXUser={playerXUser}
+          playerOUser={playerOUser}
           roomId={roomId}
-          playerO={playerO}
-          playerX={playerX}
+          onNextRound={nextRound}
+          onBackToLobby={handleBackToLobby}
         />
       )}
     </div>

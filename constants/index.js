@@ -14,3 +14,6 @@ export const WINNING_COMBINATIONS = [
 
 export const PLAYER_X = "x";
 export const PLAYER_O = "o";
+
+// First player to reach this many round wins takes the series.
+export const WINS_TO_FINISH = 3;

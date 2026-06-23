@@ -1,66 +1,32 @@
 "use server";
 
-import { auth, firestore } from "@/firebase";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
-import { collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export const signIn = async (data) => {
-  const email = data.get("email");
-  const password = data.get("password");
+const SESSION_COOKIE = "uid";
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-  const { user } = await signInWithEmailAndPassword(auth, email, password);
+// Reads the anonymous session id from the cookie. Returns undefined when the
+// visitor has no session yet.
+export const getSession = async () => cookies().get(SESSION_COOKIE)?.value;
 
-  if (!user) {
-    throw new Error("Email or password not valid!");
-  }
+// Stores the player's random id in an httpOnly cookie so server components know
+// who the visitor is without leaking it to the URL. No accounts, no auth.
+export const createSession = async (uid) => {
+  if (!uid) return;
 
-  redirect(`/room?user=${user.uid}`);
-};
-
-export const signUp = async (data) => {
-  const teamName = data.get("team");
-  const email = data.get("email");
-  const password = data.get("password");
-
-  const { user } = await createUserWithEmailAndPassword(auth, email, password);
-
-  user.displayName = teamName;
-
-  await setDoc(doc(firestore, "users", user.uid), {
-    teamName,
+  cookies().set(SESSION_COOKIE, uid, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
   });
 
-  redirect(`/room?user=${user.uid}`);
+  redirect("/room");
 };
 
-export const createBoard = async (user, data) => {
-  const collRef = collection(firestore, "rooms");
-
-  const roomName = data.get("roomName");
-  if (!roomName) return;
-
-  const roomNameToHyphenated = roomName.toLowerCase().split(" ").join("-");
-
-  const roomDoc = await getDoc(doc(collRef, roomNameToHyphenated));
-
-  if (!roomDoc.exists()) {
-    await setDoc(doc(collRef, roomNameToHyphenated), {
-      name: roomName,
-      board: Array(9).fill(null),
-      isGameDone: false,
-      turnNumber: 1,
-      winner: "NONE",
-      playerTurn: "x",
-    });
-
-    const roomRef = doc(collRef, roomNameToHyphenated);
-
-    redirect(`/room/${roomRef.id}?user=${user}`);
-  } else {
-    redirect(`/room/${roomDoc.id}?user=${user}`);
-  }
+export const signOut = async () => {
+  cookies().delete(SESSION_COOKIE);
+  redirect("/");
 };
