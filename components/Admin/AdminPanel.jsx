@@ -5,6 +5,13 @@ import { useTournament, useTournamentActions, useUsersMap } from "@/hooks";
 import Bracket from "@/components/Tournament/Bracket";
 import { useState } from "react";
 
+const Stat = ({ label, value }) => (
+  <div className="rounded-md border border-zinc-700 bg-[#1c1c1c] px-3 py-2">
+    <p className="text-xs uppercase tracking-wide text-zinc-400">{label}</p>
+    <p className="mt-1 truncate text-lg font-semibold capitalize">{value}</p>
+  </div>
+);
+
 const AdminPanel = () => {
   const { tournament } = useTournament();
   const usersMap = useUsersMap();
@@ -13,6 +20,13 @@ const AdminPanel = () => {
 
   const teamCount = Object.keys(usersMap).length;
   const status = tournament?.status ?? "pending";
+
+  const matches = Object.values(tournament?.matches ?? {});
+  const totalMatches = matches.length;
+  const decidedMatches = matches.filter((m) => m.winner).length;
+  const championName = tournament?.champion
+    ? usersMap[tournament.champion] ?? "…"
+    : null;
 
   const handleDraw = async () => {
     if (
@@ -49,14 +63,25 @@ const AdminPanel = () => {
         </form>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-zinc-300">
-        <span>
-          Registered teams: <span className="font-semibold">{teamCount}</span>
-        </span>
-        <span>
-          Status: <span className="font-semibold">{status}</span>
-        </span>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Registered teams" value={teamCount} />
+        <Stat label="Status" value={status} />
+        <Stat
+          label="Matches decided"
+          value={`${decidedMatches}/${totalMatches}`}
+        />
+        <Stat label="Champion" value={championName ?? "—"} />
       </div>
+
+      {status === "done" && championName && (
+        <div className="mt-6 rounded-md border border-emerald-700 bg-emerald-950/40 p-5 text-center">
+          <p className="text-sm text-zinc-300">Tournament result</p>
+          <p className="mt-1 text-2xl md:text-3xl">
+            🏆{" "}
+            <span className="font-extrabold uppercase">{championName}</span>
+          </p>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-3">
         <button
