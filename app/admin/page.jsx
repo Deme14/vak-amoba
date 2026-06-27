@@ -1,11 +1,8 @@
-import { adminLogin, getSession, isAdmin } from "@/actions";
+import { adminLogin, isAdmin } from "@/actions";
 import AdminPanel from "@/components/Admin/AdminPanel";
-import { redirect } from "next/navigation";
 
 export default async function AdminPage({ searchParams }) {
-  const uid = await getSession();
-  if (!uid) redirect("/");
-
+  // The admin is its own role — no player session/team needed, only the password.
   if (await isAdmin()) {
     return <AdminPanel />;
   }
