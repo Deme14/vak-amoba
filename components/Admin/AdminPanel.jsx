@@ -1,5 +1,6 @@
 "use client";
 
+import { adminLogout } from "@/actions";
 import { useTournament, useTournamentActions, useUsersMap } from "@/hooks";
 import Bracket from "@/components/Tournament/Bracket";
 import { useState } from "react";
@@ -36,7 +37,17 @@ const AdminPanel = () => {
 
   return (
     <div className="mx-auto min-h-svh max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-bold">Tournament admin</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold">Tournament admin</h1>
+        <form action={adminLogout}>
+          <button
+            type="submit"
+            className="text-sm text-zinc-400 hover:text-zinc-200"
+          >
+            Log out
+          </button>
+        </form>
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-zinc-300">
         <span>

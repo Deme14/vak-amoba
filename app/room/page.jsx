@@ -1,12 +1,14 @@
 import { getSession } from "@/actions";
-import Lobby from "@/components/Tournament/Lobby";
+import LobbyTabs from "@/components/Lobby/LobbyTabs";
 import { redirect } from "next/navigation";
 
-const RoomPage = async () => {
+const RoomPage = async ({ searchParams }) => {
   const uid = await getSession();
   if (!uid) redirect("/");
 
-  return <Lobby currentUserId={uid} />;
+  const initialTab = searchParams?.tab === "tournament" ? "tournament" : "play";
+
+  return <LobbyTabs currentUserId={uid} initialTab={initialTab} />;
 };
 
 export default RoomPage;

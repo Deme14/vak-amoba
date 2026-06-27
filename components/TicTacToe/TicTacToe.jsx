@@ -68,7 +68,8 @@ const TicTacToe = ({ roomId, user }) => {
     if (isPlayer) {
       wasPlayerRef.current = true;
     } else if (wasPlayerRef.current) {
-      router.push("/room");
+      // Tournament matches land back on the bracket tab; free play on its own.
+      router.push(room.matchId ? "/room?tab=tournament" : "/room");
     }
   }, [room, user, router]);
 
